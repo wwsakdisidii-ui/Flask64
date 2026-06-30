@@ -1,0 +1,39 @@
+name: Build N64 Emulator EXE
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest  # FIXED: Correct indentation level
+
+    steps:
+    - name: Checkout Repository Code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Set up MSBuild & Visual Studio C++ Compiler
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Install Dependencies via vcpkg
+      run: |
+        vcpkg install sdl2:x64-windows
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . `
+          -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+          -DVCPKG_TARGET_TRIPLET=x64-windows
+
+    - name: Compile Executable (.EXE)
+      run: cmake --build build --config Release
+
+    - name: Upload Compiled EXE Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: N64Emulator-Windows-EXE
+        path: build/Release/N64Emulator.exe
